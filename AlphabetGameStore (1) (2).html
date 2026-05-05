@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alphabet Game Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg0:#060a12;--bg1:#0c1220;--bg2:#101828;--bg3:#172035;--bg4:#1e2b42;--bg5:#263450;
+  --gold:#f0b429;--gold2:#c98b0a;--gold3:#a06b00;
+  --cyan:#00d4ff;--cyan2:#0099cc;
+  --red:#ff4444;--green:#22c55e;--orange:#f97316;
+  --text1:#eef2ff;--text2:#8898b8;--text3:#3d5070;
+  --border:#182038;--radius:14px;
+  --font-head:'Rajdhani',sans-serif;--font-body:'Nunito',sans-serif
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg0);color:var(--text1);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--gold3);border-radius:2px}
+
+/* NAVBAR */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(6,10,18,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--gold);letter-spacing:2px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.logo-box{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#060a12;font-family:var(--font-head);animation:gpulse 2.5s infinite}
+@keyframes gpulse{0%,100%{box-shadow:0 0 0 0 rgba(240,180,41,0.4)}50%{box-shadow:0 0 0 8px rgba(240,180,41,0)}}
+.nav-right{display:flex;align-items:center;gap:10px}
+.shop-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);font-family:var(--font-head);letter-spacing:1px}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
+.sdot.closed{background:var(--red);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.nav-btn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:8px;font-family:var(--font-head);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px}
+.nav-btn:hover{border-color:var(--gold);color:var(--gold)}
+.nav-btn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#060a12;border:none}
+
+/* PAGES */
+.page{display:none;min-height:100vh;padding-top:58px}
+.page.active{display:block}
+
+/* HOME */
+.hero{padding:36px 20px 24px;text-align:center;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(240,180,41,0.07),transparent 70%);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:44px 44px;opacity:0.25;pointer-events:none}
+.hero h1{font-family:var(--font-head);font-size:clamp(22px,5vw,42px);font-weight:700;color:var(--gold);letter-spacing:3px;line-height:1.1;margin-bottom:6px;position:relative}
+.hero h1 span{color:var(--text1)}
+.hero-sub{color:var(--text2);font-size:12px;letter-spacing:2px;margin-bottom:14px;position:relative;font-family:var(--font-head)}
+.hero-stats{display:flex;justify-content:center;gap:28px;margin-bottom:20px;position:relative}
+.stat{text-align:center}
+.stat-num{font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--gold)}
+.stat-label{font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.welcome-box{background:rgba(240,180,41,0.06);border:1px solid rgba(240,180,41,0.15);border-radius:12px;padding:10px 18px;font-size:13px;color:var(--text2);max-width:480px;margin:0 auto 20px;position:relative;line-height:1.5}
+.search-wrap{max-width:440px;margin:0 auto 6px;position:relative}
+.search-wrap input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:11px 44px 11px 16px;color:var(--text1);font-family:var(--font-body);font-size:14px;outline:none;transition:border 0.2s}
+.search-wrap input:focus{border-color:var(--gold)}
+.search-wrap input::placeholder{color:var(--text3)}
+.search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+
+/* BANNER SLIDER */
+.banner-slider{position:relative;width:100%;max-width:600px;margin:0 auto 16px;border-radius:14px;overflow:hidden;aspect-ratio:16/6;background:var(--bg3)}
+.banner-track{display:flex;height:100%;transition:transform 0.5s cubic-bezier(.4,0,.2,1)}
+.banner-slide{min-width:100%;height:100%;position:relative;flex-shrink:0}
+.banner-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.banner-slide-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,var(--bg3),var(--bg4))}
+.banner-prev,.banner-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;transition:background 0.2s}
+.banner-prev{left:8px}.banner-next{right:8px}
+.banner-prev:hover,.banner-next:hover{background:rgba(240,180,41,0.7)}
+.banner-dots{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:10}
+.banner-dot{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,0.4);cursor:pointer;transition:all 0.3s}
+.banner-dot.active{background:var(--gold);width:18px}
+.banner-slider:hover .banner-prev,.banner-slider:hover .banner-next{opacity:1}
+
+/* CAT TABS */
+.cat-tabs{display:flex;gap:7px;padding:14px 18px 0;overflow-x:auto;-ms-overflow-style:none;scrollbar-width:none}
+.cat-tabs::-webkit-scrollbar{display:none}
+.cat-tab{padding:6px 15px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;white-space:nowrap;transition:all 0.2s;font-family:var(--font-head)}
+.cat-tab.active{background:var(--gold);color:#060a12;border-color:var(--gold)}
+.cat-tab:hover:not(.active){color:var(--text2);border-color:var(--bg5)}
+
+/* GAMES GRID */
+.section{padding:14px 18px}
+.section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.section-title{font-family:var(--font-head);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:3px;text-transform:uppercase;white-space:nowrap}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+.games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+.game-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.25s;position:relative;animation:fadeUp 0.4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.game-card:hover{border-color:rgba(240,180,41,0.5);transform:translateY(-3px);box-shadow:0 10px 28px rgba(240,180,41,0.1)}
+.game-thumb{height:100px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:var(--bg3)}
+.game-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.game-thumb .thumb-emoji{font-size:44px;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:inherit}
+.game-thumb-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.6))}
+.thumb-mlbb{background:linear-gradient(135deg,#1a0a2e,#3d1a7a)}
+.thumb-ff{background:linear-gradient(135deg,#0a1f0a,#1a4d0a)}
+.thumb-pubg{background:linear-gradient(135deg,#1a120a,#4d2a0a)}
+.thumb-genshin{background:linear-gradient(135deg,#0a1f3d,#0a3d7a)}
+.thumb-cod{background:linear-gradient(135deg,#111,#333300)}
+.thumb-val{background:linear-gradient(135deg,#2a0a0a,#6b0000)}
+.thumb-rov{background:linear-gradient(135deg,#0a1a2a,#0a2a4d)}
+.thumb-default{background:linear-gradient(135deg,#111827,#1f2937)}
+.game-badge{position:absolute;top:7px;left:7px;z-index:2;background:var(--gold);color:#060a12;font-size:8px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:var(--font-head);letter-spacing:1px}
+.game-badge.new{background:var(--cyan);color:#060a12}
+.game-badge.sale{background:var(--red)}
+.game-info{padding:9px 11px}
+.game-name{font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--text1);letter-spacing:0.5px;margin-bottom:2px}
+.game-cur{font-size:10px;color:var(--text3)}
+
+/* ORDER PAGE */
+.order-page{padding:68px 18px 36px;max-width:580px;margin:0 auto}
+.back-row{display:flex;align-items:center;gap:8px;margin-bottom:18px;cursor:pointer;color:var(--text2);font-size:13px;transition:color 0.2s;font-family:var(--font-head);font-weight:600;letter-spacing:0.5px}
+.back-row:hover{color:var(--gold)}
+.order-game-header{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.order-game-icon{width:54px;height:54px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center}
+.order-game-icon img{width:100%;height:100%;object-fit:cover}
+.order-game-icon .oicon-emoji{font-size:28px}
+.order-game-name{font-family:var(--font-head);font-size:17px;font-weight:700;color:var(--gold);letter-spacing:1px}
+.order-game-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+.step-indicator{display:flex;align-items:center;gap:0;margin-bottom:18px}
+.step{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text3);font-family:var(--font-head)}
+.step.active{color:var(--gold)}
+.step.done{color:var(--green)}
+.step-num{width:22px;height:22px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px}
+.step-line{flex:1;height:1px;background:var(--border);margin:0 6px}
+
+.card-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px;font-family:var(--font-head)}
+.card-title::before{content:'';width:3px;height:13px;background:var(--gold);border-radius:2px}
+
+.cat-list{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.cat-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:space-between}
+.cat-item:hover,.cat-item.active{border-color:var(--gold);background:rgba(240,180,41,0.06)}
+.cat-item-name{font-size:13px;font-weight:600;color:var(--text1)}
+.cat-arrow{color:var(--text3);font-size:14px}
+
+.pkg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:9px}
+.pkg{background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:13px 9px;cursor:pointer;transition:all 0.2s;text-align:center;position:relative}
+.pkg:hover{border-color:var(--cyan);background:rgba(0,212,255,0.04)}
+.pkg.selected{border-color:var(--gold);background:rgba(240,180,41,0.08)}
+.pkg.popular::after{content:'★ BEST';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--gold);color:#060a12;font-size:7px;font-weight:700;padding:2px 8px;border-radius:3px;font-family:var(--font-head);white-space:nowrap}
+.pkg-amt{font-family:var(--font-head);font-size:16px;font-weight:700;color:var(--text1);margin-bottom:2px}
+.pkg-unit{font-size:9px;color:var(--text3);letter-spacing:0.5px;margin-bottom:7px}
+.pkg-price{font-size:12px;font-weight:700;color:var(--gold);font-family:var(--font-head)}
+
+.field-group{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.field-label{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:var(--font-head);font-weight:600}
+.field-input{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text1);font-family:var(--font-body);font-size:14px;outline:none;transition:border 0.2s;width:100%}
+.field-input:focus{border-color:var(--gold)}
+.field-input::placeholder{color:var(--text3)}
+textarea.field-input{resize:vertical;min-height:60px}
+
+/* PAYMENT */
+.pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+.pay-card{background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;padding:13px;cursor:pointer;transition:all 0.2s;text-align:center}
+.pay-card:hover,.pay-card.selected{border-color:var(--gold);background:rgba(240,180,41,0.06)}
+.pay-card-img{width:56px;height:56px;border-radius:8px;overflow:hidden;margin:0 auto 6px;background:var(--bg4);display:flex;align-items:center;justify-content:center}
+.pay-card-img img{width:100%;height:100%;object-fit:cover}
+.pay-card-emoji{font-size:28px}
+.pay-card-name{font-size:13px;font-weight:700;color:var(--text1);margin-bottom:1px;font-family:var(--font-head)}
+.pay-card-acct{font-size:10px;color:var(--text3);line-height:1.5}
+.pay-detail-box{display:none;background:var(--bg3);border:1px solid rgba(240,180,41,0.2);border-radius:12px;padding:14px;margin-top:10px}
+.pay-detail-box.show{display:block}
+.pay-qr-img{width:150px;height:150px;border-radius:8px;overflow:hidden;margin:0 auto 10px;background:var(--bg4);display:flex;align-items:center;justify-content:center}
+.pay-qr-img img{width:100%;height:100%;object-fit:contain}
+.pay-qr-placeholder{font-size:40px}
+.pay-acct-info{text-align:center;font-size:13px;color:var(--text1);font-weight:600;margin-bottom:4px}
+.pay-acct-name{text-align:center;font-size:12px;color:var(--gold);font-family:var(--font-head);font-weight:700}
+.pay-note{background:rgba(240,180,41,0.05);border:1px solid rgba(240,180,41,0.18);border-radius:8px;padding:9px 13px;font-size:11px;color:var(--text2);line-height:1.6;margin-top:10px}
+
+.ss-upload{border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-top:10px}
+.ss-upload:hover{border-color:var(--gold)}
+.ss-upload input{display:none}
+.ss-icon{font-size:28px;margin-bottom:6px}
+.ss-text{font-size:11px;color:var(--text3);line-height:1.6}
+.ss-preview{max-width:100%;border-radius:8px;display:none;margin:10px auto 0}
+
+.order-summary{background:rgba(240,180,41,0.04);border:1px solid rgba(240,180,41,0.15);border-radius:12px;padding:13px;margin-bottom:12px}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px}
+.summary-row .lbl{color:var(--text3)}
+.summary-row .val{color:var(--text1);font-weight:600}
+.summary-row.total .val{color:var(--gold);font-family:var(--font-head);font-size:15px;font-weight:700}
+.summary-divider{height:1px;background:var(--border);margin:7px 0}
+
+.submit-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#060a12;border:none;padding:13px;border-radius:12px;font-family:var(--font-head);font-weight:700;font-size:14px;cursor:pointer;letter-spacing:2px;transition:all 0.2s;margin-top:6px}
+.submit-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.submit-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.back-submit-btn{background:var(--bg4);color:var(--text2);border:none;padding:13px;border-radius:12px;font-family:var(--font-head);font-weight:700;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
+.back-submit-btn:hover{color:var(--text1)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.btn-row .back-submit-btn{flex:0 0 auto;padding:13px 20px}
+.btn-row .submit-btn{flex:1;margin-top:0}
+
+/* ORDERS PAGE */
+.orders-page{padding:68px 18px 36px;max-width:580px;margin:0 auto}
+.order-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:9px;transition:border 0.2s}
+.order-item:hover{border-color:var(--bg5)}
+.order-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.order-game-tag{font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--gold);letter-spacing:1px}
+.order-status-badge{font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;letter-spacing:1px;font-family:var(--font-head)}
+.status-pending{background:rgba(249,115,22,0.1);color:var(--orange);border:1px solid rgba(249,115,22,0.3)}
+.status-done{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
+.status-cancelled{background:rgba(255,68,68,0.1);color:var(--red);border:1px solid rgba(255,68,68,0.3)}
+.order-detail{font-size:11px;color:var(--text2);line-height:2}
+.order-detail span{color:var(--text1)}
+.order-ss-thumb{width:60px;height:60px;border-radius:8px;object-fit:cover;margin-top:8px;cursor:pointer;border:1px solid var(--border)}
+
+/* ADMIN */
+.admin-page{padding:68px 18px 36px;max-width:900px;margin:0 auto}
+.admin-login{max-width:340px;margin:80px auto 0;text-align:center}
+.admin-login h2{font-family:var(--font-head);font-size:22px;color:var(--gold);letter-spacing:2px;margin-bottom:5px}
+.admin-login p{font-size:12px;color:var(--text3);margin-bottom:20px}
+.admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px}
+.admin-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.admin-card:hover{border-color:var(--gold);background:rgba(240,180,41,0.04);transform:translateY(-2px)}
+.admin-card-icon{font-size:28px}
+.admin-card-title{font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--text1);letter-spacing:1px}
+.admin-card-sub{font-size:10px;color:var(--text3)}
+.admin-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.admin-section-title{font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.add-btn{background:var(--gold);color:#060a12;border:none;padding:5px 13px;border-radius:7px;font-family:var(--font-head);font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px}
+.add-btn:hover{opacity:0.85}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);font-family:var(--font-head)}
+.data-table td{padding:9px 10px;font-size:12px;color:var(--text2);border-bottom:1px solid rgba(24,32,56,0.5)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table td .name{color:var(--text1);font-weight:600}
+.action-btns{display:flex;gap:5px}
+.act-btn{padding:3px 9px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;border:none;letter-spacing:0.5px;font-family:var(--font-head)}
+.act-edit{background:rgba(240,180,41,0.1);color:var(--gold)}
+.act-del{background:rgba(255,68,68,0.1);color:var(--red)}
+.act-done{background:rgba(34,197,94,0.1);color:var(--green)}
+.act-cancel{background:rgba(255,68,68,0.1);color:var(--red)}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.setting-field{display:flex;flex-direction:column;gap:5px}
+.setting-label{font-size:10px;color:var(--text3);letter-spacing:1px;font-family:var(--font-head);font-weight:700}
+.setting-input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text1);font-family:var(--font-body);font-size:13px;outline:none;transition:border 0.2s;width:100%}
+.setting-input:focus{border-color:var(--gold)}
+textarea.setting-input{resize:vertical;min-height:60px}
+.save-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#060a12;border:none;padding:9px 22px;border-radius:9px;font-family:var(--font-head);font-weight:700;font-size:11px;cursor:pointer;letter-spacing:1px;margin-top:12px}
+.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.stat-card-num{font-family:var(--font-head);font-size:26px;font-weight:900;color:var(--gold)}
+.stat-card-label{font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:3px;font-family:var(--font-head)}
+.toggle-shop{display:flex;align-items:center;justify-content:space-between;padding:13px;background:var(--bg3);border-radius:12px;margin-bottom:12px}
+.toggle-label{font-size:13px;font-weight:600;color:var(--text1);font-family:var(--font-head)}
+.toggle{position:relative;width:46px;height:25px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--bg5);border-radius:13px;transition:0.3s}
+.toggle-slider::before{content:'';position:absolute;width:19px;height:19px;left:3px;top:3px;background:white;border-radius:50%;transition:0.3s}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(21px)}
+
+/* IMAGE UPLOAD WIDGET */
+.img-upload-wrap{border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border 0.2s;position:relative}
+.img-upload-wrap:hover{border-color:var(--gold)}
+.img-upload-wrap input{display:none}
+.img-preview{width:80px;height:80px;border-radius:8px;object-fit:cover;display:block;margin:0 auto 8px}
+.img-upload-label{font-size:11px;color:var(--text3)}
+.img-preview-small{width:40px;height:40px;border-radius:6px;object-fit:cover;display:inline-block;vertical-align:middle;margin-right:8px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;width:100%;max-width:420px;max-height:88vh;overflow-y:auto}
+.modal-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:18px}
+.modal-form{display:flex;flex-direction:column;gap:10px}
+.modal-btns{display:flex;gap:8px;margin-top:14px}
+.modal-btn{flex:1;padding:9px;border-radius:9px;font-family:var(--font-head);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
+.modal-btn.primary{background:var(--gold);color:#060a12;border:none}
+.modal-btn.secondary{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.modal-btn:hover{opacity:0.85}
+
+/* IMAGE LIGHTBOX */
+.lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:3000;align-items:center;justify-content:center;cursor:pointer}
+.lightbox.show{display:flex}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:12px;object-fit:contain}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:11px 16px;font-size:12px;color:var(--text1);z-index:3000;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none;max-width:280px;box-shadow:0 8px 28px rgba(0,0,0,0.4);font-family:var(--font-body)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{border-color:rgba(34,197,94,0.4)}
+.toast.error{border-color:rgba(255,68,68,0.4)}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(6,10,18,0.96);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:7px 0 10px;z-index:900}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;transition:color 0.2s;color:var(--text3);padding:3px 0}
+.bnav-item.active{color:var(--gold)}
+.bnav-icon{font-size:19px}
+.bnav-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:var(--font-head)}
+.pb-nav{padding-bottom:68px}
+
+/* EMPTY */
+.empty{text-align:center;padding:36px 18px;color:var(--text3)}
+.empty-icon{font-size:44px;margin-bottom:10px}
+.empty p{font-size:12px}
+
+/* ADMIN ORDER SS */
+.admin-ss-thumb{width:50px;height:50px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid var(--border)}
+
+@media(max-width:480px){.stats-cards{grid-template-columns:1fr 1fr}.settings-grid{grid-template-columns:1fr}.admin-card{padding:13px}.pkg-grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo" onclick="goPage('home')" id="nav-logo">
+    <div class="logo-box" id="logo-box">A</div>
+    <span id="logo-name">ALPHABET <span style="color:var(--text1);font-weight:500">STORE</span></span>
+  </div>
+  <div class="nav-right">
+    <div class="shop-status">
+      <div class="sdot" id="status-dot"></div>
+      <span id="status-txt">OPEN</span>
+    </div>
+    <button class="nav-btn" onclick="goPage('orders')">📜 Orders</button>
+    <button class="nav-btn gold" onclick="goPage('admin')" id="admin-nav-btn" style="display:none">⚙️ Admin</button>
+  </div>
+</nav>
+
+<div class="page active pb-nav" id="page-home">
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <h1>ALPHABET <span>GAME</span><br>STORE</h1>
+    <div class="hero-sub">FAST · SECURE · INSTANT</div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num" id="stat-users">0</div><div class="stat-label">Customers</div></div>
+      <div class="stat"><div class="stat-num" id="stat-orders">0</div><div class="stat-label">Completed</div></div>
+      <div class="stat"><div class="stat-num" id="stat-games">0</div><div class="stat-label">Games</div></div>
+    </div>
+    <div class="welcome-box" id="welcome-txt">✨ Alphabet Game Store へようこそ ✨</div>
+    <div id="banner-slider-wrap"></div>
+    <div class="search-wrap">
+      <input type="text" placeholder="Search games..." id="search-input" oninput="filterGames()">
+      <span class="search-icon">🔍</span>
+    </div>
+  </div>
+  <div class="cat-tabs" id="cat-tabs">
+    <button class="cat-tab active" onclick="filterCat('all',this)">All</button>
+    <button class="cat-tab" onclick="filterCat('moba',this)">MOBA</button>
+    <button class="cat-tab" onclick="filterCat('battle',this)">Battle Royale</button>
+    <button class="cat-tab" onclick="filterCat('rpg',this)">RPG</button>
+    <button class="cat-tab" onclick="filterCat('fps',this)">FPS</button>
+  </div>
+  <div class="section">
+    <div class="section-head"><div class="section-title">Select Game</div><div class="section-line"></div></div>
+    <div class="games-grid" id="games-grid"></div>
+  </div>
+</div>
+
+<div class="page pb-nav" id="page-order">
+  <div class="order-page">
+    <div class="back-row" onclick="goPage('home')">← Back</div>
+    <div class="order-game-header" id="order-header">
+      <div class="order-game-icon" id="order-icon-wrap"></div>
+      <div>
+        <div class="order-game-name" id="order-game-name"></div>
+        <div class="order-game-sub" id="order-game-sub"></div>
+      </div>
+    </div>
+    <div class="step-indicator">
+      <div class="step active" id="step1"><div class="step-num">1</div>PACKAGE</div>
+      <div class="step-line"></div>
+      <div class="step" id="step2"><div class="step-num">2</div>PLAYER</div>
+      <div class="step-line"></div>
+      <div class="step" id="step3"><div class="step-num">3</div>PAYMENT</div>
+    </div>
+
+    <div id="step-1-content">
+      <div class="card-section" id="cat-section">
+        <div class="card-title">Choose Category</div>
+        <div class="cat-list" id="order-cats"></div>
+      </div>
+      <div class="card-section" id="pkg-section" style="display:none">
+        <div class="card-title">Select Package</div>
+        <div class="pkg-grid" id="order-pkgs"></div>
+        <div class="btn-row">
+          <button class="submit-btn" style="font-size:13px" onclick="goStep(2)" id="pkg-next-btn" disabled>NEXT →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="step-2-content" style="display:none">
+      <div class="card-section">
+        <div class="card-title">Player Information</div>
+        <div class="field-group">
+          <div class="field-label">GAME ID / UID</div>
+          <input class="field-input" type="text" placeholder="Game ID ထည့်ပေးပါ..." id="uid-input">
+        </div>
+        <div class="field-group" id="zone-field">
+          <div class="field-label">SERVER / ZONE ID <span style="color:var(--text3)">(ရှိလျှင်)</span></div>
+          <input class="field-input" type="text" placeholder="ဥပမာ: 1234" id="zone-input">
+        </div>
+        <div class="field-group">
+          <div class="field-label">IN-GAME NAME</div>
+          <input class="field-input" type="text" placeholder="In-game နာမည်ထည့်ပေးပါ..." id="ingame-name-input">
+        </div>
+        <div class="field-group">
+          <div class="field-label">CONTACT <span style="color:var(--text3)">(Optional)</span></div>
+          <input class="field-input" type="text" placeholder="Phone / Telegram..." id="contact-input">
+        </div>
+        <div class="btn-row">
+          <button class="back-submit-btn" onclick="goStep(1)">← BACK</button>
+          <button class="submit-btn" style="font-size:13px" onclick="goStep(3)">NEXT →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="step-3-content" style="display:none">
+      <div class="order-summary" id="order-summary"></div>
+      <div class="card-section">
+        <div class="card-title">Payment Method</div>
+        <div class="pay-methods" id="pay-methods-list"></div>
+        <div class="pay-detail-box" id="pay-detail-box">
+          <div class="pay-qr-img" id="pay-qr-img-wrap">
+            <span class="pay-qr-placeholder">📱</span>
+          </div>
+          <div class="pay-acct-info" id="pay-acct-info"></div>
+          <div class="pay-acct-name" id="pay-acct-name"></div>
+        </div>
+        <div class="pay-note" id="pay-note"></div>
+      </div>
+      <div class="card-section">
+        <div class="card-title">Upload Payment Screenshot</div>
+        <div class="ss-upload" onclick="document.getElementById('ss-input').click()">
+          <input type="file" id="ss-input" accept="image/*" onchange="previewSS(event)">
+          <div class="ss-icon">📸</div>
+          <div class="ss-text">Screenshot တင်ရန် ဖိနှိပ်ပါ<br><span style="font-size:10px">PNG, JPG</span></div>
+        </div>
+        <img class="ss-preview" id="ss-preview" alt="Screenshot">
+      </div>
+      <div class="btn-row">
+        <button class="back-submit-btn" onclick="goStep(2)">← BACK</button>
+        <button class="submit-btn" id="final-submit-btn" style="font-size:13px" onclick="submitOrder()">🚀 ORDER တင်ရန်</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page pb-nav" id="page-orders">
+  <div class="orders-page">
+    <div class="section-head" style="margin-bottom:14px"><div class="section-title">My Orders</div><div class="section-line"></div></div>
+    <div id="orders-list"></div>
+  </div>
+</div>
+
+<div class="page pb-nav" id="page-admin">
+  <div class="admin-page">
+    <div id="admin-login-section" class="admin-login">
+      <div style="font-size:44px;margin-bottom:14px">🔐</div>
+      <h2>ADMIN ACCESS</h2>
+      <p>Password ထည့်ပေးပါ</p>
+      <div class="field-group" style="margin-bottom:10px">
+        <input class="field-input" type="password" placeholder="Password..." id="admin-pw-input" onkeydown="if(event.key==='Enter')adminLogin()">
+      </div>
+      <button class="submit-btn" onclick="adminLogin()">LOGIN →</button>
+    </div>
+
+    <div id="admin-dashboard" style="display:none">
+      <div class="section-head" style="margin-bottom:14px"><div class="section-title">Admin Panel</div><div class="section-line"></div></div>
+      <div class="stats-cards">
+        <div class="stat-card"><div class="stat-card-num" id="a-stat-users">0</div><div class="stat-card-label">Customers</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="a-stat-orders">0</div><div class="stat-card-label">Completed</div></div>
+        <div class="stat-card"><div class="stat-card-num" id="a-stat-pending">0</div><div class="stat-card-label">Pending</div></div>
+      </div>
+      <div class="admin-section">
+        <div class="toggle-shop">
+          <div class="toggle-label">🏪 Shop Status</div>
+          <label class="toggle"><input type="checkbox" id="shop-toggle" onchange="toggleShop()"><div class="toggle-slider"></div></label>
+        </div>
+      </div>
+      <div class="admin-grid">
+        <div class="admin-card" onclick="showAdminSection('games')"><div class="admin-card-icon">🎮</div><div class="admin-card-title">GAMES</div><div class="admin-card-sub">Manage games</div></div>
+        <div class="admin-card" onclick="showAdminSection('categories')"><div class="admin-card-icon">📁</div><div class="admin-card-title">CATEGORIES</div><div class="admin-card-sub">Manage categories</div></div>
+        <div class="admin-card" onclick="showAdminSection('items')"><div class="admin-card-icon">💎</div><div class="admin-card-title">PACKAGES</div><div class="admin-card-sub">Items & prices</div></div>
+        <div class="admin-card" onclick="showAdminSection('payments')"><div class="admin-card-icon">💳</div><div class="admin-card-title">PAYMENTS</div><div class="admin-card-sub">Payment methods</div></div>
+        <div class="admin-card" onclick="showAdminSection('orders-admin')"><div class="admin-card-icon">📊</div><div class="admin-card-title">ORDERS</div><div class="admin-card-sub">View & manage</div></div>
+        <div class="admin-card" onclick="showAdminSection('settings')"><div class="admin-card-icon">⚙️</div><div class="admin-card-title">SETTINGS</div><div class="admin-card-sub">Shop config</div></div>
+        <div class="admin-card" onclick="adminLogout()"><div class="admin-card-icon">🚪</div><div class="admin-card-title">LOGOUT</div><div class="admin-card-sub">Exit admin</div></div>
+      </div>
+      <div id="admin-content"></div>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <div class="bnav-item active" id="bnav-home" onclick="goPage('home')"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
+  <div class="bnav-item" id="bnav-orders" onclick="goPage('orders')"><div class="bnav-icon">📜</div><div class="bnav-label">Orders</div></div>
+  <div class="bnav-item" id="bnav-admin" onclick="goPage('admin')"><div class="bnav-icon">⚙️</div><div class="bnav-label">Admin</div></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-form" id="modal-form"></div>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeModalDirect()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==========================================
+// SUPABASE SETUP (Replace these with yours)
+// ==========================================
+const SUPABASE_URL = 'https://nvgxpcgkaorzqvrylfbg.supabase.co/rest/v1/'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_f75s8ZmmoihmJ-YlKsk2Ng_yV5spTYu'; 
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ==========================================
+// DATA STORE
+// ==========================================
+const STORE_KEY = 'alphabetgamestore_v2';
+
+function loadData() {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (raw) {
+    try { return JSON.parse(raw); } catch(e) {}
+  }
+  return getDefaultData();
+}
+
+function getDefaultData() {
+  return {
+    settings: {
+      welcome_text: '✨ Alphabet Game Store မှ ကြိုဆိုပါသည် ✨\nFast · Secure · 24/7 Service',
+      wait_time: '5-15 မိနစ်',
+      shop_status: 'open',
+      done_msg: '✅ Order ဖြည့်သွင်းပြီးပါပြီ။',
+      cancel_msg: '❌ Order ပယ်ဖျက်လိုက်ပါသည်။',
+      admin_password: 'admin123'
+    },
+    games: [
+      {id:1, name:'Mobile Legends', icon:'⚔️', thumb:'mlbb', category:'moba', img:'', badge:'HOT', prompt:'Player ID နှင့် Zone ID ထည့်ပေးပါ'},
+      {id:2, name:'Free Fire', icon:'🔥', thumb:'ff', category:'battle', img:'', badge:'', prompt:'UID ထည့်ပေးပါ'},
+      {id:3, name:'PUBG Mobile', icon:'🪖', thumb:'pubg', category:'battle', img:'', badge:'', prompt:'Player ID ထည့်ပေးပါ'},
+      {id:4, name:'Genshin Impact', icon:'✨', thumb:'genshin', category:'rpg', img:'', badge:'NEW', prompt:'UID နှင့် Server ရွေးချယ်ပေးပါ'},
+      {id:5, name:'Call of Duty', icon:'🎯', thumb:'cod', category:'fps', img:'', badge:'', prompt:'Activision ID ထည့်ပေးပါ'},
+      {id:6, name:'Valorant', icon:'🔺', thumb:'val', category:'fps', img:'', badge:'', prompt:'Riot ID#Tag ထည့်ပေးပါ'},
+    ],
+    categories: [
+      {id:1, game_id:1, name:'Weekly Diamond Pass', img:''},
+      {id:2, game_id:1, name:'Diamonds', img:''},
+      {id:3, game_id:2, name:'Diamonds', img:''},
+      {id:4, game_id:3, name:'UC', img:''},
+      {id:5, game_id:4, name:'Genesis Crystals', img:''},
+      {id:6, game_id:5, name:'CP Points', img:''},
+      {id:7, game_id:6, name:'VP Points', img:''},
+    ],
+    items: [
+      {id:1, cat_id:1, name:'Weekly Pass', price:'2,500 MMK', img:''},
+      {id:2, cat_id:2, name:'56 Diamonds', price:'1,500 MMK', img:''},
+      {id:3, cat_id:2, name:'172 Diamonds', price:'4,200 MMK', popular:true, img:''},
+      {id:4, cat_id:2, name:'257 Diamonds', price:'6,200 MMK', img:''},
+      {id:5, cat_id:2, name:'514 Diamonds', price:'12,000 MMK', img:''},
+      {id:6, cat_id:2, name:'1050 Diamonds', price:'24,000 MMK', img:''},
+      {id:7, cat_id:3, name:'100 Diamonds', price:'2,500 MMK', img:''},
+      {id:8, cat_id:3, name:'310 Diamonds', price:'7,500 MMK', popular:true, img:''},
+      {id:9, cat_id:3, name:'520 Diamonds', price:'12,000 MMK', img:''},
+      {id:10, cat_id:4, name:'60 UC', price:'2,000 MMK', img:''},
+      {id:11, cat_id:4, name:'325 UC', price:'10,000 MMK', popular:true, img:''},
+      {id:12, cat_id:4, name:'660 UC', price:'20,000 MMK', img:''},
+      {id:13, cat_id:5, name:'60 Crystals', price:'2,200 MMK', img:''},
+      {id:14, cat_id:5, name:'980 Crystals', price:'33,000 MMK', popular:true, img:''},
+      {id:15, cat_id:6, name:'80 CP', price:'2,800 MMK', img:''},
+      {id:16, cat_id:6, name:'420 CP', price:'13,500 MMK', popular:true, img:''},
+      {id:17, cat_id:7, name:'125 VP', price:'3,500 MMK', img:''},
+      {id:18, cat_id:7, name:'700 VP', price:'18,000 MMK', popular:true, img:''},
+    ],
+    payments: [
+      {id:1, name:'KPay', number:'09xxxxxxxxx', account_name:'ဦး/မ နာမည်', img:'', qr_img:'', active:true},
+      {id:2, name:'Wave Pay', number:'09xxxxxxxxx', account_name:'ဦး/မ နာမည်', img:'', qr_img:'', active:true},
+    ],
+    orders: []
+  };
+}
+
+function saveData(data) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+
+let DB = loadData();
+let isAdmin = false;
+let currentGame = null;
+let selectedCat = null;
+let selectedPkg = null;
+let selectedPayId = null;
+let currentOrderStep = 1;
+let modalSaveFn = null;
+let ssDataURL = '';
+
+// ==========================================
+// NAVIGATION
+// ==========================================
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const bnav = document.getElementById('bnav-' + name);
+  if (bnav) bnav.classList.add('active');
+  if (name === 'home') renderGames();
+  if (name === 'orders') renderMyOrders();
+  if (name === 'admin') renderAdmin();
+  window.scrollTo(0, 0);
+}
+
+// ==========================================
+// HOME
+// ==========================================
+let currentCat = 'all';
+let searchQ = '';
+
+function renderGames() {
+  DB = loadData();
+  const s = DB.settings;
+  document.getElementById('welcome-txt').textContent = s.welcome_text;
+  const isOpen = s.shop_status === 'open';
+  document.getElementById('status-dot').className = 'sdot' + (isOpen ? '' : ' closed');
+  document.getElementById('status-txt').textContent = isOpen ? 'OPEN' : 'CLOSED';
+  updateNavLogo();
+  renderBannerSlider();
+
+  const done = DB.orders.filter(o => o.status === 'Done').length;
+  const users = [...new Set(DB.orders.map(o => o.uid).filter(Boolean))].length;
+  animCount('stat-users', users);
+  animCount('stat-orders', done);
+  animCount('stat-games', DB.games.length);
+
+  const grid = document.getElementById('games-grid');
+  let games = DB.games;
+  if (currentCat !== 'all') games = games.filter(g => g.category === currentCat);
+  if (searchQ) games = games.filter(g => g.name.toLowerCase().includes(searchQ.toLowerCase()));
+
+  if (!games.length) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p>No games found</p></div>';
+    return;
+  }
+  grid.innerHTML = games.map((g, i) => {
+    const thumbContent = g.img
+      ? `<img src="${g.img}" alt="${g.name}" style="width:100%;height:100%;object-fit:cover">`
+      : `<div class="thumb-emoji">${g.icon}</div>`;
+    return `<div class="game-card" onclick="openGame(${g.id})" style="animation-delay:${i*0.05}s">
+      <div class="game-thumb thumb-${g.thumb || 'default'}">
+        ${thumbContent}
+        <div class="game-thumb-overlay"></div>
+        ${g.badge ? `<div class="game-badge ${g.badge==='NEW'?'new':''}">${g.badge}</div>` : ''}
+      </div>
+      <div class="game-info">
+        <div class="game-name">${g.name}</div>
+        <div class="game-cur">${getGameCurrency(g.id)} Topup</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getGameCurrency(gid) {
+  const cats = DB.categories.filter(c => c.game_id === gid);
+  return cats.map(c => c.name).slice(0, 1).join('') || 'Diamonds';
+}
+
+function filterCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderGames();
+}
+function filterGames() { searchQ = document.getElementById('search-input').value; renderGames(); }
+
+function animCount(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  let n = 0, step = Math.max(1, Math.ceil(target / 30));
+  const t = setInterval(() => { n = Math.min(n + step, target); el.textContent = n; if (n >= target) clearInterval(t); }, 30);
+}
+
+// ==========================================
+// ORDER FLOW
+// ==========================================
+function openGame(gid) {
+  if (DB.settings.shop_status === 'closed') { showToast('⚠️ ဆိုင်ပိတ်ထားပါသည်', 'error'); return; }
+  DB = loadData();
+  currentGame = DB.games.find(g => g.id === gid);
+  selectedCat = null; selectedPkg = null; selectedPayId = null; ssDataURL = '';
+  currentOrderStep = 1;
+  document.getElementById('ss-preview').style.display = 'none';
+
+  // Header icon
+  const iconWrap = document.getElementById('order-icon-wrap');
+  if (currentGame.img) {
+    iconWrap.innerHTML = `<img src="${currentGame.img}" alt="${currentGame.name}" style="width:54px;height:54px;object-fit:cover;border-radius:10px">`;
+  } else {
+    iconWrap.innerHTML = `<span class="oicon-emoji">${currentGame.icon}</span>`;
+  }
+  document.getElementById('order-game-name').textContent = currentGame.name;
+  document.getElementById('order-game-sub').textContent = currentGame.prompt || 'Fast & Secure Topup';
+
+  renderOrderCats();
+  goStep(1);
+  goPage('order');
+}
+
+function renderOrderCats() {
+  const cats = DB.categories.filter(c => c.game_id === currentGame.id);
+  document.getElementById('order-cats').innerHTML = cats.map(c => {
+    const imgHtml = c.img ? `<img src="${c.img}" class="img-preview-small" alt="">` : '📁 ';
+    return `<div class="cat-item" id="ocat-${c.id}" onclick="selectOrderCat(${c.id})">
+      <div class="cat-item-name">${imgHtml}${c.name}</div>
+      <div class="cat-arrow">›</div>
+    </div>`;
+  }).join('');
+  document.getElementById('pkg-section').style.display = 'none';
+}
+
+function selectOrderCat(cid) {
+  selectedCat = DB.categories.find(c => c.id === cid);
+  selectedPkg = null;
+  document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+  document.getElementById('ocat-' + cid).classList.add('active');
+  renderPkgs(cid);
+  document.getElementById('pkg-section').style.display = 'block';
+  document.getElementById('pkg-next-btn').disabled = true;
+}
+
+function renderPkgs(cid) {
+  const items = DB.items.filter(i => i.cat_id === cid);
+  document.getElementById('order-pkgs').innerHTML = items.map(i => {
+    const thumbHtml = i.img
+      ? `<img src="${i.img}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-bottom:4px" alt="">`
+      : '';
+    const numPart = i.name.match(/[\d,]+/);
+    const txtPart = i.name.replace(/[\d,]+/, '').trim();
+    return `<div class="pkg ${i.popular ? 'popular' : ''}" id="opkg-${i.id}" onclick="selectPkg(${i.id})">
+      ${thumbHtml}
+      <div class="pkg-amt">${numPart ? numPart[0] : i.name}</div>
+      <div class="pkg-unit">${txtPart || selectedCat.name}</div>
+      <div class="pkg-price">${i.price}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectPkg(iid) {
+  selectedPkg = DB.items.find(i => i.id === iid);
+  document.querySelectorAll('.pkg').forEach(p => p.classList.remove('selected'));
+  document.getElementById('opkg-' + iid).classList.add('selected');
+  document.getElementById('pkg-next-btn').disabled = false;
+}
+
+function goStep(n) {
+  currentOrderStep = n;
+  ['step-1-content','step-2-content','step-3-content'].forEach((id, i) => {
+    document.getElementById(id).style.display = i + 1 === n ? 'block' : 'none';
+  });
+  ['step1','step2','step3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.className = 'step' + (i+1===n?' active':i+1<n?' done':'');
+  });
+  if (n === 3) buildPaymentStep();
+}
+
+function buildPaymentStep() {
+  const game = currentGame, cat = selectedCat, pkg = selectedPkg;
+  const uid = document.getElementById('uid-input').value;
+  const ingame = document.getElementById('ingame-name-input').value;
+
+  document.getElementById('order-summary').innerHTML = `
+    <div class="summary-row"><span class="lbl">Game</span><span class="val">${game.name}</span></div>
+    <div class="summary-row"><span class="lbl">Category</span><span class="val">${cat?.name||'-'}</span></div>
+    <div class="summary-row"><span class="lbl">Package</span><span class="val">${pkg?.name||'-'}</span></div>
+    <div class="summary-row"><span class="lbl">Player ID</span><span class="val">${uid||'-'}</span></div>
+    <div class="summary-row"><span class="lbl">In-Game Name</span><span class="val">${ingame||'-'}</span></div>
+    <div class="summary-divider"></div>
+    <div class="summary-row total"><span class="lbl">Total</span><span class="val">${pkg?.price||'-'}</span></div>`;
+
+  const activePays = DB.payments.filter(p => p.active);
+  document.getElementById('pay-methods-list').innerHTML = activePays.map(p => {
+    const imgHtml = p.img
+      ? `<img src="${p.img}" style="width:40px;height:40px;border-radius:7px;object-fit:cover;">`
+      : `<span style="font-size:26px">💳</span>`;
+    return `<div class="pay-card" id="paycard-${p.id}" onclick="selectPay(${p.id})">
+      <div class="pay-card-img">${imgHtml}</div>
+      <div class="pay-card-name">${p.name}</div>
+      <div class="pay-card-acct">${p.number}<br>${p.account_name}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('pay-detail-box').classList.remove('show');
+  document.getElementById('pay-note').innerHTML = `<strong>📌 မှတ်ချက်:</strong> ငွေလွှဲပြီးနောက် Screenshot တင်ပေးပါ။ ကြာချိန် ${DB.settings.wait_time} ဆောင်ပေးပါမည်။`;
+}
+
+function selectPay(pid) {
+  selectedPayId = pid;
+  document.querySelectorAll('.pay-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('paycard-' + pid).classList.add('selected');
+  const p = DB.payments.find(x => x.id === pid);
+  if (!p) return;
+  const box = document.getElementById('pay-detail-box');
+  box.classList.add('show');
+  const qrWrap = document.getElementById('pay-qr-img-wrap');
+  qrWrap.innerHTML = p.qr_img
+    ? `<img src="${p.qr_img}" style="width:100%;height:100%;object-fit:contain;cursor:pointer" onclick="openLightbox('${p.qr_img}')" alt="QR" title="ကြီးကြည့်ရန် နှိပ်ပါ">`
+    : `<span class="pay-qr-placeholder">📱</span>`;
+  document.getElementById('pay-acct-info').textContent = p.number;
+  document.getElementById('pay-acct-name').textContent = p.account_name;
+}
+
+function previewSS(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    ssDataURL = ev.target.result;
+    const img = document.getElementById('ss-preview');
+    img.src = ssDataURL;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// 🚀 SUPABASE ချိတ်ဆက်ထားသော SUBMIT ORDER FUNCTION အသစ် 🚀
+async function submitOrder() {
+  const uid = document.getElementById('uid-input').value.trim();
+  const ingame = document.getElementById('ingame-name-input').value.trim();
+  const zone = document.getElementById('zone-input').value.trim();
+  const contact = document.getElementById('contact-input').value.trim();
+  
+  if (!uid) { showToast('Game ID ထည့်ပေးပါ', 'error'); goStep(2); return; }
+  if (!selectedPkg) { showToast('Package ရွေးပေးပါ', 'error'); goStep(1); return; }
+  if (!selectedPayId) { showToast('Payment Method ရွေးပေးပါ', 'error'); return; }
+  if (!ssDataURL) { showToast('Screenshot တင်ပေးပါ', 'error'); return; } // ပုံမဖြစ်မနေတင်ရမည်
+
+  const pay = DB.payments.find(p => p.id === selectedPayId);
+  const btn = document.getElementById('final-submit-btn');
+  const oldBtnText = btn.innerHTML;
+  
+  // Loading State
+  btn.innerHTML = '⏳ ကျေးဇူးပြု၍ ခဏစောင့်ပါ...';
+  btn.disabled = true;
+
+  try {
+    // ၁။ ပုံကို Storage ('payment-proofs') သို့ အရင်တင်မည်
+    const response = await fetch(ssDataURL);
+    const blob = await response.blob();
+    const fileName = `order_${Date.now()}.png`;
+
+    const { data: uploadData, error: uploadError } = await supabaseClient
+      .storage
+      .from('payment-proofs')
+      .upload(fileName, blob);
+
+    if (uploadError) throw uploadError;
+
+    // ၂။ ပုံရဲ့ Public URL ကို ယူမည်
+    const { data: publicUrlData } = supabaseClient
+      .storage
+      .from('payment-proofs')
+      .getPublicUrl(fileName);
+      
+    const publicUrl = publicUrlData.publicUrl;
+
+    // ၃။ ဂဏန်းသီးသန့် ဈေးနှုန်းထုတ်ယူခြင်း (ဥပမာ "2,500 MMK" -> 2500)
+    const numericPrice = parseInt(selectedPkg.price.replace(/[^0-9]/g, '')) || 0;
+    const customerName = ingame || uid;
+
+    // ၄။ Supabase 'orders' Table သို့ ဒေတာပို့ခြင်း
+    const { error: insertError } = await supabaseClient
+      .from('orders')
+      .insert([
+        {
+          customer_name: customerName,
+          game_name: currentGame.name,
+          price: numericPrice,
+          screenshot_url: publicUrl,
+          status: 'pending' // Default value
+        }
+      ]);
+
+    if (insertError) throw insertError;
+
+    // ၅။ အစ်ကို့ရဲ့ လက်ရှိ Local Storage စနစ်မပျက်အောင် UI မှာပါ သိမ်းပေးမည်
+    DB = loadData();
+    const order = {
+      id: Date.now(),
+      uid, zone, ingame, contact,
+      game: currentGame.name,
+      game_id: currentGame.id,
+      category: selectedCat?.name || '',
+      item: selectedPkg.name,
+      price: selectedPkg.price,
+      pay_method: pay?.name || '',
+      pay_number: pay?.number || '',
+      screenshot: publicUrl, // Base64 အစား Online Link ကိုသုံးထားပါတယ် App မလေးအောင်လို့ပါ
+      status: 'Pending',
+      date: new Date().toLocaleString()
+    };
+    DB.orders.push(order);
+    saveData(DB);
+
+    showToast(`✅ Order တင်ပြီးပါပြီ! ကြာချိန် ${DB.settings.wait_time}`, 'success');
+    
+    setTimeout(() => { 
+      btn.innerHTML = oldBtnText;
+      btn.disabled = false;
+      goPage('orders'); 
+    }, 1500);
+
+  } catch (err) {
+    console.error("Supabase Error:", err);
+    showToast('❌ အမှားအယွင်းဖြစ်ပေါ်နေပါသည်။ ထပ်မံကြိုးစားကြည့်ပါ။', 'error');
+    btn.innerHTML = oldBtnText;
+    btn.disabled = false;
+  }
+}
+
+// ==========================================
+// MY ORDERS
+// ==========================================
+function renderMyOrders() {
+  DB = loadData();
+  const list = document.getElementById('orders-list');
+  if (!DB.orders.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>Order မှတ်တမ်းမရှိပါ</p></div>';
+    return;
+  }
+  const orders = [...DB.orders].reverse().slice(0, 30);
+  list.innerHTML = orders.map(o => `
+    <div class="order-item">
+      <div class="order-top">
+        <div class="order-game-tag">🎮 ${o.game}</div>
+        <div class="order-status-badge status-${(o.status||'pending').toLowerCase()}">${o.status}</div>
+      </div>
+      <div class="order-detail">
+        Category: <span>${o.category}</span> &nbsp;|&nbsp; Package: <span>${o.item}</span><br>
+        Price: <span style="color:var(--gold)">${o.price}</span> &nbsp;|&nbsp; Payment: <span>${o.pay_method}</span><br>
+        Player ID: <span>${o.uid}${o.zone?' ('+o.zone+')':''}</span><br>
+        In-Game Name: <span>${o.ingame||'-'}</span><br>
+        <span style="color:var(--text3);font-size:10px">${o.date}</span>
+      </div>
+      ${o.screenshot ? `<img class="order-ss-thumb" src="${o.screenshot}" onclick="openLightbox('${o.screenshot}')" alt="SS">` : ''}
+    </div>`).join('');
+}
+
+// ==========================================
+// ADMIN
+// ==========================================
+function renderAdmin() {
+  DB = loadData();
+  if (!isAdmin) {
+    document.getElementById('admin-login-section').style.display = 'block';
+    document.getElementById('admin-dashboard').style.display = 'none';
+  } else {
+    showAdminDashboard();
+  }
+}
+
+function adminLogin() {
+  DB = loadData();
+  const pw = document.getElementById('admin-pw-input').value;
+  if (pw === DB.settings.admin_password) {
+    isAdmin = true;
+    document.getElementById('admin-nav-btn').style.display = 'block';
+    showAdminDashboard();
+    showToast('✅ Login Successful', 'success');
+  } else {
+    showToast('❌ Wrong Password', 'error');
+  }
+}
+
+function adminLogout() {
+  isAdmin = false;
+  document.getElementById('admin-nav-btn').style.display = 'none';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('admin-login-section').style.display = 'block';
+  document.getElementById('admin-pw-input').value = '';
+  document.getElementById('admin-content').innerHTML = '';
+}
+
+function showAdminDashboard() {
+  document.getElementById('admin-login-section').style.display = 'none';
+  document.getElementById('admin-dashboard').style.display = 'block';
+  const done = DB.orders.filter(o => o.status === 'Done').length;
+  const pending = DB.orders.filter(o => o.status === 'Pending').length;
+  const users = [...new Set(DB.orders.map(o => o.uid).filter(Boolean))].length;
+  document.getElementById('a-stat-users').textContent = users;
+  document.getElementById('a-stat-orders').textContent = done;
+  document.getElementById('a-stat-pending').textContent = pending;
+  document.getElementById('shop-toggle').checked = DB.settings.shop_status === 'open';
+}
+
+function toggleShop() {
+  DB = loadData();
+  DB.settings.shop_status = document.getElementById('shop-toggle').checked ? 'open' : 'closed';
+  saveData(DB);
+  showToast(`Shop ${DB.settings.shop_status === 'open' ? 'Opened ✅' : 'Closed 🔒'}`, 'success');
+}
+
+// IMAGE HELPERS
+function imgUploadField(id, currentImg, label='Image') {
+  return `<div class="field-group">
+    <div class="field-label">${label} (Optional)</div>
+    <div class="img-upload-wrap" onclick="document.getElementById('${id}').click()">
+      <input type="file" id="${id}" accept="image/*" onchange="previewImgField('${id}','${id}-prev')" style="display:none">
+      ${currentImg ? `<img id="${id}-prev" class="img-preview" src="${currentImg}" alt="">` : `<img id="${id}-prev" class="img-preview" src="" alt="" style="display:none">`}
+      <div class="img-upload-label">📷 ${label} ထည့်ရန်နှိပ်ပါ</div>
+    </div>
+  </div>`;
+}
+
+function previewImgField(inputId, previewId) {
+  const file = document.getElementById(inputId).files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById(previewId);
+    img.src = ev.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function getImgValue(inputId, fallback='') {
+  const prev = document.getElementById(inputId + '-prev');
+  if (prev && prev.src && !prev.src.endsWith(window.location.href)) return prev.src;
+  return fallback;
+}
+
+// ADMIN SECTIONS
+function showAdminSection(sec) {
+  DB = loadData();
+  const c = document.getElementById('admin-content');
+
+  if (sec === 'games') {
+    c.innerHTML = `<div class="admin-section">
+      <div class="admin-section-title">GAMES <button class="add-btn" onclick="openAddGame()">+ ADD</button></div>
+      <table class="data-table">
+        <thead><tr><th>Thumb</th><th>Name</th><th>Cat</th><th>Badge</th><th>Actions</th></tr></thead>
+        <tbody>${DB.games.map(g => `<tr>
+          <td>${g.img ? `<img class="img-preview-small" src="${g.img}" alt="">` : g.icon}</td>
+          <td><span class="name">${g.name}</span></td>
+          <td>${g.category}</td>
+          <td>${g.badge||'-'}</td>
+          <td><div class="action-btns">
+            <button class="act-btn act-edit" onclick="openEditGame(${g.id})">Edit</button>
+            <button class="act-btn act-del" onclick="deleteGame(${g.id})">Del</button>
+          </div></td></tr>`).join('')}
+        </tbody></table></div>`;
+
+  } else if (sec === 'categories') {
+    const gameOpts = `<option value="all">🎮 All Games</option>` + DB.games.map(g=>`<option value="${g.id}">${g.icon} ${g.name}</option>`).join('');
+    const filterGid = window._adminCatFilter || 'all';
+    const filteredCats = filterGid==='all' ? DB.categories : DB.categories.filter(c=>c.game_id===parseInt(filterGid));
+    c.innerHTML = `<div class="admin-section">
+      <div class="admin-section-title">CATEGORIES <button class="add-btn" onclick="openAddCat()">+ ADD</button></div>
+      <div style="margin-bottom:12px">
+        <select class="field-input" style="max-width:220px" onchange="window._adminCatFilter=this.value;showAdminSection('categories')">
+          ${gameOpts.replace(`value="${filterGid}"`,`value="${filterGid}" selected`)}
+        </select>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Img</th><th>Game</th><th>Category</th><th>Actions</th></tr></thead>
+        <tbody>${filteredCats.map(cat => {
+          const g = DB.games.find(g => g.id === cat.game_id);
+          return `<tr>
+            <td>${cat.img ? `<img class="img-preview-small" src="${cat.img}" alt="">` : '📁'}</td>
+            <td>${g ? g.icon+' '+g.name : '?'}</td>
+            <td><span class="name">${cat.name}</span></td>
+            <td><div class="action-btns">
+              <button class="act-btn act-edit" onclick="openEditCat(${cat.id})">Edit</button>
+              <button class="act-btn act-del" onclick="deleteCat(${cat.id})">Del</button>
+            </div></td></tr>`;
+        }).join('')}</tbody></table></div>`;
+
+  } else if (sec === 'items') {
+    const gameOptsI = `<option value="all">🎮 All Games</option>` + DB.games.map(g=>`<option value="${g.id}">${g.icon} ${g.name}</option>`).join('');
+    const filterGidI = window._adminItemFilter || 'all';
+    const filteredItems = filterGidI==='all' ? DB.items : DB.items.filter(i=>{
+      const cat = DB.categories.find(c=>c.id===i.cat_id);
+      return cat && cat.game_id===parseInt(filterGidI);
+    });
+    c.innerHTML = `<div class="admin-section">
+      <div class="admin-section-title">PACKAGES <button class="add-btn" onclick="openAddItem()">+ ADD</button></div>
+      <div style="margin-bottom:12px">
+        <select class="field-input" style="max-width:220px" onchange="window._adminItemFilter=this.value;showAdminSection('items')">
+          ${gameOptsI.replace(`value="${filterGidI}"`,`value="${filterGidI}" selected`)}
+        </select>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Img</th><th>Category</th><th>Package</th><th>Price</th><th>Actions</th></tr></thead>
+        <tbody>${filteredItems.map(i => {
+          const cat = DB.categories.find(c => c.id === i.cat_id);
+          return `<tr>
+            <td>${i.img ? `<img class="img-preview-small" src="${i.img}" alt="">` : '💎'}</td>
+            <td>${cat ? cat.name : '?'}</td>
+            <td><span class="name">${i.name}</span>${i.popular?' ⭐':''}</td>
+            <td style="color:var(--gold)">${i.price}</td>
+            <td><div class="action-btns">
+              <button class="act-btn act-edit" onclick="openEditItem(${i.id})">Edit</button>
+              <button class="act-btn act-del" onclick="deleteItem(${i.id})">Del</button>
+            </div></td></tr>`;
+        }).join('')}</tbody></table></div>`;
+
+  } else if (sec === 'payments') {
+    c.innerHTML = `<div class="admin-section">
+      <div class="admin-section-title">PAYMENT METHODS <button class="add-btn" onclick="openAddPayment()">+ ADD</button></div>
+      <table class="data-table">
+        <thead><tr><th>Logo</th><th>Name</th><th>Number</th><th>Account Name</th><th>QR</th><th>Actions</th></tr></thead>
+        <tbody>${DB.payments.map(p => `<tr>
+          <td>${p.img ? `<img class="img-preview-small" src="${p.img}" alt="">` : '💳'}</td>
+          <td><span class="name">${p.name}</span></td>
+          <td>${p.number}</td>
+          <td>${p.account_name}</td>
+          <td>${p.qr_img ? `<img class="admin-ss-thumb" src="${p.qr_img}" onclick="openLightbox('${p.qr_img}')" alt="QR">` : '-'}</td>
+          <td><div class="action-btns">
+            <button class="act-btn act-edit" onclick="openEditPayment(${p.id})">Edit</button>
+            <button class="act-btn act-del" onclick="deletePayment(${p.id})">Del</button>
+          </div></td></tr>`).join('')}
+        </tbody></table></div>`;
+
+  } else if (sec === 'orders-admin') {
+    c.innerHTML = `<div class="admin-section">
+      <div class="admin-section-title">ALL ORDERS</div>
+      ${!DB.orders.length ? '<div class="empty"><div class="empty-icon">📭</div><p>No orders yet</p></div>' :
+      `<table class="data-table">
+        <thead><tr><th>Game</th><th>Package</th><th>Player ID</th><th>Name</th><th>Price</th><th>Payment</th><th>SS</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${[...DB.orders].reverse().map(o => `<tr>
+          <td><span class="name">${o.game}</span></td>
+          <td>${o.item}</td>
+          <td>${o.uid}${o.zone?' ('+o.zone+')':''}</td>
+          <td>${o.ingame||'-'}</td>
+          <td style="color:var(--gold)">${o.price}</td>
+          <td>${o.pay_method}<br><span style="font-size:10px;color:var(--text3)">${o.pay_number||''}</span></td>
+          <td>${o.screenshot ? `<img class="admin-ss-thumb" src="${o.screenshot}" onclick="openLightbox('${o.screenshot}')" alt="SS">` : '-'}</td>
+          <td><div class="order-status-badge status-${(o.status||'pending').toLowerCase()}" style="display:inline-block">${o.status}</div></td>
+          <td><div class="action-btns">
+            ${o.status==='Pending'?`<button class="act-btn act-done" onclick="updateOrder(${o.id},'Done')">✓</button>
+            <button class="act-btn act-cancel" onclick="updateOrder(${o.id},'Cancelled')">✗</button>`:''}
+          </div></td></tr>`).join('')}
+        </tbody></table>`}
+      </div>`;
+
+  } else if (sec === 'settings') {
+    const s = DB.settings;
+    c.innerHTML = `<div class="admin-section">
+      <div class="admin-section-title">SHOP SETTINGS</div>
+      <div class="settings-grid">
+        <div class="setting-field"><div class="setting-label">SHOP NAME</div><input class="setting-input" id="s-shopname" value="${s.shop_name||'ALPHABET STORE'}"></div>
+        <div class="setting-field"><div class="setting-label">WELCOME TEXT</div><textarea class="setting-input" id="s-welcome" rows="3">${s.welcome_text}</textarea></div>
+        <div class="setting-field"><div class="setting-label">WAIT TIME</div><input class="setting-input" id="s-wait" value="${s.wait_time}"></div>
+        <div class="setting-field"><div class="setting-label">DONE MESSAGE</div><input class="setting-input" id="s-done" value="${s.done_msg}"></div>
+        <div class="setting-field"><div class="setting-label">CANCEL MESSAGE</div><input class="setting-input" id="s-cancel" value="${s.cancel_msg}"></div>
+        <div class="setting-field"><div class="setting-label">ADMIN PASSWORD</div><input class="setting-input" id="s-pw" type="password" placeholder="(မပြောင်းလျှင်ထားခဲ့ပါ)"></div>
+      </div>
+      <div class="setting-field" style="margin-top:10px">
+        <div class="setting-label">SHOP LOGO / ICON</div>
+        ${imgUploadField('s-logo', s.shop_logo||'', 'Shop Logo')}
+      </div>
+      <div class="setting-field" style="margin-top:10px">
+        <div class="setting-label">BANNER IMAGES (Home Page Slider)</div>
+        <div id="banner-admin-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          ${(s.banners||[]).map((b,i)=>`<div style="position:relative;width:90px">
+            <img src="${b}" style="width:90px;height:54px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+            <button onclick="removeBanner(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--red);border:none;color:#fff;width:18px;height:18px;border-radius:50%;font-size:11px;cursor:pointer;line-height:18px;text-align:center">×</button>
+          </div>`).join('')}
+        </div>
+        <div class="img-upload-wrap" onclick="document.getElementById('s-banner-input').click()" style="padding:10px">
+          <input type="file" id="s-banner-input" accept="image/*" style="display:none" onchange="addBanner(event)">
+          <div class="img-upload-label">📸 Banner ပုံထည့်ရန် နှိပ်ပါ (ပုံများစွာ ထည့်နိုင်သည်)</div>
+        </div>
+      </div>
+      <button class="save-btn" onclick="saveSettings()">💾 SAVE</button>
+    </div>`;
+  }
+  c.scrollIntoView({behavior:'smooth'});
+}
+
+function saveSettings() {
+  DB = loadData();
+  DB.settings.shop_name = document.getElementById('s-shopname').value;
+  DB.settings.welcome_text = document.getElementById('s-welcome').value;
+  DB.settings.wait_time = document.getElementById('s-wait').value;
+  DB.settings.done_msg = document.getElementById('s-done').value;
+  DB.settings.cancel_msg = document.getElementById('s-cancel').value;
+  const pw = document.getElementById('s-pw').value;
+  if (pw) DB.settings.admin_password = pw;
+  DB.settings.shop_logo = getImgValue('s-logo', DB.settings.shop_logo||'');
+  saveData(DB);
+  updateNavLogo();
+  showToast('✅ Settings Saved!', 'success');
+}
+
+function updateOrder(oid, status) {
+  DB = loadData();
+  const o = DB.orders.find(o => o.id === oid);
+  if (o) { o.status = status; saveData(DB); }
+  showToast(status === 'Done' ? '✅ Done!' : '❌ Cancelled', status === 'Done' ? 'success' : 'error');
+  showAdminSection('orders-admin');
+  showAdminDashboard();
+}
+
+// GAME CRUD
+function openAddGame() {
+  openModal('ADD GAME', `
+    <div class="field-group"><div class="field-label">GAME NAME</div><input class="field-input" id="m-name" placeholder="Mobile Legends..."></div>
+    <div class="field-group"><div class="field-label">ICON (Emoji)</div><input class="field-input" id="m-icon" placeholder="⚔️"></div>
+    <div class="field-group"><div class="field-label">CATEGORY</div>
+      <select class="field-input" id="m-cat">
+        <option value="moba">MOBA</option><option value="battle">Battle Royale</option>
+        <option value="rpg">RPG</option><option value="fps">FPS</option>
+      </select></div>
+    <div class="field-group"><div class="field-label">BADGE</div><input class="field-input" id="m-badge" placeholder="HOT / NEW / SALE"></div>
+    <div class="field-group"><div class="field-label">ID PROMPT</div><input class="field-input" id="m-prompt" placeholder="Player ID ထည့်ပေးပါ"></div>
+    ${imgUploadField('m-img', '', 'Game Thumbnail')}
+  `, () => {
+    DB = loadData();
+    const name = document.getElementById('m-name').value.trim();
+    if (!name) { showToast('Name required', 'error'); return; }
+    DB.games.push({
+      id: Date.now(), name,
+      icon: document.getElementById('m-icon').value || '🎮',
+      thumb: 'default', category: document.getElementById('m-cat').value,
+      badge: document.getElementById('m-badge').value || null,
+      prompt: document.getElementById('m-prompt').value || 'Player ID ထည့်ပေးပါ',
+      img: getImgValue('m-img')
+    });
+    saveData(DB); showToast('✅ Game Added!', 'success'); closeModalDirect(); showAdminSection('games');
+  });
+}
+
+function openEditGame(gid) {
+  DB = loadData();
+  const g = DB.games.find(x => x.id === gid);
+  openModal('EDIT GAME', `
+    <div class="field-group"><div class="field-label">GAME NAME</div><input class="field-input" id="m-name" value="${g.name}"></div>
+    <div class="field-group"><div class="field-label">ICON</div><input class="field-input" id="m-icon" value="${g.icon}"></div>
+    <div class="field-group"><div class="field-label">BADGE</div><input class="field-input" id="m-badge" value="${g.badge||''}"></div>
+    <div class="field-group"><div class="field-label">ID PROMPT</div><input class="field-input" id="m-prompt" value="${g.prompt||''}"></div>
+    ${imgUploadField('m-img', g.img, 'Game Thumbnail')}
+  `, () => {
+    DB = loadData();
+    const idx = DB.games.findIndex(x => x.id === gid);
+    DB.games[idx].name = document.getElementById('m-name').value;
+    DB.games[idx].icon = document.getElementById('m-icon').value;
+    DB.games[idx].badge = document.getElementById('m-badge').value || null;
+    DB.games[idx].prompt = document.getElementById('m-prompt').value;
+    const newImg = getImgValue('m-img', g.img);
+    DB.games[idx].img = newImg;
+    saveData(DB); showToast('✅ Updated!', 'success'); closeModalDirect(); showAdminSection('games');
+  });
+}
+
+function deleteGame(gid) {
+  if (!confirm('Delete this game?')) return;
+  DB = loadData();
+  DB.games = DB.games.filter(g => g.id !== gid);
+  saveData(DB); showToast('Deleted', 'success'); showAdminSection('games');
+}
+
+// CAT CRUD
+function openAddCat() {
+  DB = loadData();
+  const opts = DB.games.map(g => `<option value="${g.id}">${g.icon} ${g.name}</option>`).join('');
+  openModal('ADD CATEGORY', `
+    <div class="field-group"><div class="field-label">GAME</div><select class="field-input" id="m-gid">${opts}</select></div>
+    <div class="field-group"><div class="field-label">CATEGORY NAME</div><input class="field-input" id="m-name" placeholder="Diamonds..."></div>
+    ${imgUploadField('m-img', '', 'Category Image')}
+  `, () => {
+    DB = loadData();
+    const name = document.getElementById('m-name').value.trim();
+    if (!name) { showToast('Name required', 'error'); return; }
+    DB.categories.push({ id: Date.now(), game_id: parseInt(document.getElementById('m-gid').value), name, img: getImgValue('m-img') });
+    saveData(DB); showToast('✅ Added!', 'success'); closeModalDirect(); showAdminSection('categories');
+  });
+}
+
+function openEditCat(cid) {
+  DB = loadData();
+  const cat = DB.categories.find(c => c.id === cid);
+  openModal('EDIT CATEGORY', `
+    <div class="field-group"><div class="field-label">CATEGORY NAME</div><input class="field-input" id="m-name" value="${cat.name}"></div>
+    ${imgUploadField('m-img', cat.img, 'Category Image')}
+  `, () => {
+    DB = loadData();
+    const idx = DB.categories.findIndex(c => c.id === cid);
+    DB.categories[idx].name = document.getElementById('m-name').value;
+    DB.categories[idx].img = getImgValue('m-img', cat.img);
+    saveData(DB); showToast('✅ Updated!', 'success'); closeModalDirect(); showAdminSection('categories');
+  });
+}
+
+function deleteCat(cid) {
+  if (!confirm('Delete?')) return;
+  DB = loadData();
+  DB.categories = DB.categories.filter(c => c.id !== cid);
+  DB.items = DB.items.filter(i => i.cat_id !== cid);
+  saveData(DB); showToast('Deleted', 'success'); showAdminSection('categories');
+}
+
+// ITEM CRUD
+function openAddItem() {
+  DB = loadData();
+  const opts = DB.categories.map(c => {
+    const g = DB.games.find(g => g.id === c.game_id);
+    return `<option value="${c.id}">${g?g.name+' › ':''}${c.name}</option>`;
+  }).join('');
+  openModal('ADD PACKAGE', `
+    <div class="field-group"><div class="field-label">CATEGORY</div><select class="field-input" id="m-cid">${opts}</select></div>
+    <div class="field-group"><div class="field-label">PACKAGE NAME</div><input class="field-input" id="m-name" placeholder="86 Diamonds..."></div>
+    <div class="field-group"><div class="field-label">PRICE</div><input class="field-input" id="m-price" placeholder="2,500 MMK"></div>
+    <div class="field-group"><div class="field-label">POPULAR ★</div>
+      <select class="field-input" id="m-pop"><option value="0">No</option><option value="1">Yes</option></select></div>
+    ${imgUploadField('m-img', '', 'Package Image')}
+  `, () => {
+    DB = loadData();
+    const name = document.getElementById('m-name').value.trim();
+    const price = document.getElementById('m-price').value.trim();
+    if (!name || !price) { showToast('Fill all fields', 'error'); return; }
+    DB.items.push({ id: Date.now(), cat_id: parseInt(document.getElementById('m-cid').value), name, price, popular: document.getElementById('m-pop').value==='1', img: getImgValue('m-img') });
+    saveData(DB); showToast('✅ Added!', 'success'); closeModalDirect(); showAdminSection('items');
+  });
+}
+
+function openEditItem(iid) {
+  DB = loadData();
+  const item = DB.items.find(i => i.id === iid);
+  openModal('EDIT PACKAGE', `
+    <div class="field-group"><div class="field-label">PACKAGE NAME</div><input class="field-input" id="m-name" value="${item.name}"></div>
+    <div class="field-group"><div class="field-label">PRICE</div><input class="field-input" id="m-price" value="${item.price}"></div>
+    <div class="field-group"><div class="field-label">POPULAR ★</div>
+      <select class="field-input" id="m-pop"><option value="0" ${!item.popular?'selected':''}>No</option><option value="1" ${item.popular?'selected':''}>Yes</option></select></div>
+    ${imgUploadField('m-img', item.img||'', 'Package Image')}
+  `, () => {
+    DB = loadData();
+    const idx = DB.items.findIndex(i => i.id === iid);
+    DB.items[idx].name = document.getElementById('m-name').value;
+    DB.items[idx].price = document.getElementById('m-price').value;
+    DB.items[idx].popular = document.getElementById('m-pop').value === '1';
+    DB.items[idx].img = getImgValue('m-img', item.img||'');
+    saveData(DB); showToast('✅ Updated!', 'success'); closeModalDirect(); showAdminSection('items');
+  });
+}
+
+function deleteItem(iid) {
+  if (!confirm('Delete?')) return;
+  DB = loadData();
+  DB.items = DB.items.filter(i => i.id !== iid);
+  saveData(DB); showToast('Deleted', 'success'); showAdminSection('items');
+}
+
+// PAYMENT CRUD
+function openAddPayment() {
+  openModal('ADD PAYMENT METHOD', `
+    <div class="field-group"><div class="field-label">NAME</div><input class="field-input" id="m-pname" placeholder="KPay / Wave Pay..."></div>
+    <div class="field-group"><div class="field-label">PHONE NUMBER</div><input class="field-input" id="m-pnum" placeholder="09xxxxxxxxx"></div>
+    <div class="field-group"><div class="field-label">ACCOUNT NAME</div><input class="field-input" id="m-paname" placeholder="ဦး/မ နာမည်"></div>
+    ${imgUploadField('m-plogo', '', 'Payment Logo')}
+    ${imgUploadField('m-pqr', '', 'QR Code Image')}
+  `, () => {
+    DB = loadData();
+    const name = document.getElementById('m-pname').value.trim();
+    if (!name) { showToast('Name required', 'error'); return; }
+    DB.payments.push({
+      id: Date.now(), name,
+      number: document.getElementById('m-pnum').value,
+      account_name: document.getElementById('m-paname').value,
+      img: getImgValue('m-plogo'),
+      qr_img: getImgValue('m-pqr'),
+      active: true
+    });
+    saveData(DB); showToast('✅ Added!', 'success'); closeModalDirect(); showAdminSection('payments');
+  });
+}
+
+function openEditPayment(pid) {
+  DB = loadData();
+  const p = DB.payments.find(x => x.id === pid);
+  openModal('EDIT PAYMENT', `
+    <div class="field-group"><div class="field-label">NAME</div><input class="field-input" id="m-pname" value="${p.name}"></div>
+    <div class="field-group"><div class="field-label">PHONE NUMBER</div><input class="field-input" id="m-pnum" value="${p.number}"></div>
+    <div class="field-group"><div class="field-label">ACCOUNT NAME</div><input class="field-input" id="m-paname" value="${p.account_name}"></div>
+    ${imgUploadField('m-plogo', p.img||'', 'Payment Logo')}
+    ${imgUploadField('m-pqr', p.qr_img||'', 'QR Code Image')}
+  `, () => {
+    DB = loadData();
+    const idx = DB.payments.findIndex(x => x.id === pid);
+    DB.payments[idx].name = document.getElementById('m-pname').value;
+    DB.payments[idx].number = document.getElementById('m-pnum').value;
+    DB.payments[idx].account_name = document.getElementById('m-paname').value;
+    DB.payments[idx].img = getImgValue('m-plogo', p.img||'');
+    DB.payments[idx].qr_img = getImgValue('m-pqr', p.qr_img||'');
+    saveData(DB); showToast('✅ Updated!', 'success'); closeModalDirect(); showAdminSection('payments');
+  });
+}
+
+function deletePayment(pid) {
+  if (!confirm('Delete?')) return;
+  DB = loadData();
+  DB.payments = DB.payments.filter(p => p.id !== pid);
+  saveData(DB); showToast('Deleted', 'success'); showAdminSection('payments');
+}
+
+// ==========================================
+// MODAL
+// ==========================================
+function openModal(title, formHTML, saveFn) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-form').innerHTML = formHTML;
+  modalSaveFn = saveFn;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function saveModal() { if (modalSaveFn) modalSaveFn(); }
+function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+// ==========================================
+// LIGHTBOX
+// ==========================================
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); }
+
+// ==========================================
+// TOAST
+// ==========================================
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type?' '+type:'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ==========================================
+// NAV LOGO
+// ==========================================
+function updateNavLogo() {
+  DB = loadData();
+  const s = DB.settings;
+  const name = s.shop_name || 'ALPHABET STORE';
+  const parts = name.split(' ');
+  const first = parts[0];
+  const rest = parts.slice(1).join(' ');
+  document.getElementById('logo-name').innerHTML = first + (rest ? ` <span style="color:var(--text1);font-weight:500">${rest}</span>` : '');
+  const box = document.getElementById('logo-box');
+  if (s.shop_logo) {
+    box.innerHTML = `<img src="${s.shop_logo}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`;
+    box.style.padding = '0';
+  } else {
+    box.innerHTML = name.charAt(0).toUpperCase();
+    box.style.padding = '';
+  }
+}
+
+// ==========================================
+// BANNER SLIDER
+// ==========================================
+let bannerTimer = null;
+let bannerIdx = 0;
+
+function renderBannerSlider() {
+  DB = loadData();
+  const banners = DB.settings.banners || [];
+  const wrap = document.getElementById('banner-slider-wrap');
+  if (!banners.length) { wrap.innerHTML = ''; return; }
+
+  wrap.innerHTML = `<div class="banner-slider" id="banner-slider">
+    <div class="banner-track" id="banner-track">
+      ${banners.map(b=>`<div class="banner-slide"><img src="${b}" alt="banner"></div>`).join('')}
+    </div>
+    ${banners.length>1?`
+    <button class="banner-prev" onclick="bannerGo(-1)">‹</button>
+    <button class="banner-next" onclick="bannerGo(1)">›</button>
+    <div class="banner-dots" id="banner-dots">
+      ${banners.map((_,i)=>`<div class="banner-dot ${i===0?'active':''}" onclick="bannerSet(${i})"></div>`).join('')}
+    </div>`:''}
+  </div>`;
+
+  bannerIdx = 0;
+  startBannerAuto();
+
+  // Swipe support
+  const slider = document.getElementById('banner-slider');
+  if (slider) {
+    let tx = 0;
+    slider.addEventListener('touchstart', e=>{ tx=e.touches[0].clientX; }, {passive:true});
+    slider.addEventListener('touchend', e=>{ const dx=e.changedTouches[0].clientX-tx; if(Math.abs(dx)>40) bannerGo(dx<0?1:-1); }, {passive:true});
+  }
+}
+
+function bannerGo(dir) {
+  DB = loadData();
+  const banners = DB.settings.banners || [];
+  if (!banners.length) return;
+  bannerIdx = (bannerIdx + dir + banners.length) % banners.length;
+  bannerApply();
+  restartBannerAuto();
+}
+
+function bannerSet(i) {
+  bannerIdx = i;
+  bannerApply();
+  restartBannerAuto();
+}
+
+function bannerApply() {
+  const track = document.getElementById('banner-track');
+  if (track) track.style.transform = `translateX(-${bannerIdx*100}%)`;
+  document.querySelectorAll('.banner-dot').forEach((d,i)=>d.classList.toggle('active', i===bannerIdx));
+}
+
+function startBannerAuto() {
+  clearInterval(bannerTimer);
+  DB = loadData();
+  const banners = DB.settings.banners || [];
+  if (banners.length < 2) return;
+  bannerTimer = setInterval(()=>{ bannerGo(1); }, 5000);
+}
+
+function restartBannerAuto() { startBannerAuto(); }
+
+// Admin banner helpers
+function addBanner(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    DB = loadData();
+    if (!DB.settings.banners) DB.settings.banners = [];
+    DB.settings.banners.push(ev.target.result);
+    saveData(DB);
+    showToast('✅ Banner ထည့်ပြီးပါပြီ', 'success');
+    showAdminSection('settings');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeBanner(idx) {
+  DB = loadData();
+  DB.settings.banners.splice(idx,1);
+  saveData(DB);
+  showToast('Deleted', 'success');
+  showAdminSection('settings');
+}
+
+// INIT
+updateNavLogo();
+renderGames();
+</script>
+</body>
+</html>
