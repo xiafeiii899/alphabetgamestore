@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alphabet Game Store</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -303,7 +304,6 @@ textarea.setting-input{resize:vertical;min-height:60px}
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <div class="logo" onclick="goPage('home')" id="nav-logo">
     <div class="logo-box" id="logo-box">A</div>
@@ -319,7 +319,6 @@ textarea.setting-input{resize:vertical;min-height:60px}
   </div>
 </nav>
 
-<!-- HOME PAGE -->
 <div class="page active pb-nav" id="page-home">
   <div class="hero">
     <div class="hero-bg"></div>
@@ -351,7 +350,6 @@ textarea.setting-input{resize:vertical;min-height:60px}
   </div>
 </div>
 
-<!-- ORDER PAGE -->
 <div class="page pb-nav" id="page-order">
   <div class="order-page">
     <div class="back-row" onclick="goPage('home')">← Back</div>
@@ -370,7 +368,6 @@ textarea.setting-input{resize:vertical;min-height:60px}
       <div class="step" id="step3"><div class="step-num">3</div>PAYMENT</div>
     </div>
 
-    <!-- STEP 1 -->
     <div id="step-1-content">
       <div class="card-section" id="cat-section">
         <div class="card-title">Choose Category</div>
@@ -385,7 +382,6 @@ textarea.setting-input{resize:vertical;min-height:60px}
       </div>
     </div>
 
-    <!-- STEP 2 -->
     <div id="step-2-content" style="display:none">
       <div class="card-section">
         <div class="card-title">Player Information</div>
@@ -412,7 +408,6 @@ textarea.setting-input{resize:vertical;min-height:60px}
       </div>
     </div>
 
-    <!-- STEP 3 -->
     <div id="step-3-content" style="display:none">
       <div class="order-summary" id="order-summary"></div>
       <div class="card-section">
@@ -438,13 +433,12 @@ textarea.setting-input{resize:vertical;min-height:60px}
       </div>
       <div class="btn-row">
         <button class="back-submit-btn" onclick="goStep(2)">← BACK</button>
-        <button class="submit-btn" style="font-size:13px" onclick="submitOrder()">🚀 ORDER တင်ရန်</button>
+        <button class="submit-btn" id="final-submit-btn" style="font-size:13px" onclick="submitOrder()">🚀 ORDER တင်ရန်</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MY ORDERS PAGE -->
 <div class="page pb-nav" id="page-orders">
   <div class="orders-page">
     <div class="section-head" style="margin-bottom:14px"><div class="section-title">My Orders</div><div class="section-line"></div></div>
@@ -452,7 +446,6 @@ textarea.setting-input{resize:vertical;min-height:60px}
   </div>
 </div>
 
-<!-- ADMIN PAGE -->
 <div class="page pb-nav" id="page-admin">
   <div class="admin-page">
     <div id="admin-login-section" class="admin-login">
@@ -492,14 +485,12 @@ textarea.setting-input{resize:vertical;min-height:60px}
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <div class="bnav-item active" id="bnav-home" onclick="goPage('home')"><div class="bnav-icon">🏠</div><div class="bnav-label">Home</div></div>
   <div class="bnav-item" id="bnav-orders" onclick="goPage('orders')"><div class="bnav-icon">📜</div><div class="bnav-label">Orders</div></div>
   <div class="bnav-item" id="bnav-admin" onclick="goPage('admin')"><div class="bnav-icon">⚙️</div><div class="bnav-label">Admin</div></div>
 </div>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal">
     <div class="modal-title" id="modal-title"></div>
@@ -511,15 +502,20 @@ textarea.setting-input{resize:vertical;min-height:60px}
   </div>
 </div>
 
-<!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <img id="lightbox-img" src="" alt="">
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
+// ==========================================
+// SUPABASE SETUP (Replace these with yours)
+// ==========================================
+const SUPABASE_URL = 'https://nvgxpcgkaorzqvrylfbg.supabase.co/rest/v1/'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_f75s8ZmmoihmJ-YlKsk2Ng_yV5spTYu'; 
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ==========================================
 // DATA STORE
 // ==========================================
@@ -695,6 +691,7 @@ function openGame(gid) {
   currentGame = DB.games.find(g => g.id === gid);
   selectedCat = null; selectedPkg = null; selectedPayId = null; ssDataURL = '';
   currentOrderStep = 1;
+  document.getElementById('ss-preview').style.display = 'none';
 
   // Header icon
   const iconWrap = document.getElementById('order-icon-wrap');
@@ -827,35 +824,99 @@ function previewSS(e) {
   reader.readAsDataURL(file);
 }
 
-function submitOrder() {
+// 🚀 SUPABASE ချိတ်ဆက်ထားသော SUBMIT ORDER FUNCTION အသစ် 🚀
+async function submitOrder() {
   const uid = document.getElementById('uid-input').value.trim();
   const ingame = document.getElementById('ingame-name-input').value.trim();
   const zone = document.getElementById('zone-input').value.trim();
   const contact = document.getElementById('contact-input').value.trim();
+  
   if (!uid) { showToast('Game ID ထည့်ပေးပါ', 'error'); goStep(2); return; }
   if (!selectedPkg) { showToast('Package ရွေးပေးပါ', 'error'); goStep(1); return; }
   if (!selectedPayId) { showToast('Payment Method ရွေးပေးပါ', 'error'); return; }
-  const pay = DB.payments.find(p => p.id === selectedPayId);
+  if (!ssDataURL) { showToast('Screenshot တင်ပေးပါ', 'error'); return; } // ပုံမဖြစ်မနေတင်ရမည်
 
-  DB = loadData();
-  const order = {
-    id: Date.now(),
-    uid, zone, ingame, contact,
-    game: currentGame.name,
-    game_id: currentGame.id,
-    category: selectedCat?.name || '',
-    item: selectedPkg.name,
-    price: selectedPkg.price,
-    pay_method: pay?.name || '',
-    pay_number: pay?.number || '',
-    screenshot: ssDataURL,
-    status: 'Pending',
-    date: new Date().toLocaleString()
-  };
-  DB.orders.push(order);
-  saveData(DB);
-  showToast(`✅ Order တင်ပြီးပါပြီ! ကြာချိန် ${DB.settings.wait_time}`, 'success');
-  setTimeout(() => { goPage('orders'); }, 1500);
+  const pay = DB.payments.find(p => p.id === selectedPayId);
+  const btn = document.getElementById('final-submit-btn');
+  const oldBtnText = btn.innerHTML;
+  
+  // Loading State
+  btn.innerHTML = '⏳ ကျေးဇူးပြု၍ ခဏစောင့်ပါ...';
+  btn.disabled = true;
+
+  try {
+    // ၁။ ပုံကို Storage ('payment-proofs') သို့ အရင်တင်မည်
+    const response = await fetch(ssDataURL);
+    const blob = await response.blob();
+    const fileName = `order_${Date.now()}.png`;
+
+    const { data: uploadData, error: uploadError } = await supabaseClient
+      .storage
+      .from('payment-proofs')
+      .upload(fileName, blob);
+
+    if (uploadError) throw uploadError;
+
+    // ၂။ ပုံရဲ့ Public URL ကို ယူမည်
+    const { data: publicUrlData } = supabaseClient
+      .storage
+      .from('payment-proofs')
+      .getPublicUrl(fileName);
+      
+    const publicUrl = publicUrlData.publicUrl;
+
+    // ၃။ ဂဏန်းသီးသန့် ဈေးနှုန်းထုတ်ယူခြင်း (ဥပမာ "2,500 MMK" -> 2500)
+    const numericPrice = parseInt(selectedPkg.price.replace(/[^0-9]/g, '')) || 0;
+    const customerName = ingame || uid;
+
+    // ၄။ Supabase 'orders' Table သို့ ဒေတာပို့ခြင်း
+    const { error: insertError } = await supabaseClient
+      .from('orders')
+      .insert([
+        {
+          customer_name: customerName,
+          game_name: currentGame.name,
+          price: numericPrice,
+          screenshot_url: publicUrl,
+          status: 'pending' // Default value
+        }
+      ]);
+
+    if (insertError) throw insertError;
+
+    // ၅။ အစ်ကို့ရဲ့ လက်ရှိ Local Storage စနစ်မပျက်အောင် UI မှာပါ သိမ်းပေးမည်
+    DB = loadData();
+    const order = {
+      id: Date.now(),
+      uid, zone, ingame, contact,
+      game: currentGame.name,
+      game_id: currentGame.id,
+      category: selectedCat?.name || '',
+      item: selectedPkg.name,
+      price: selectedPkg.price,
+      pay_method: pay?.name || '',
+      pay_number: pay?.number || '',
+      screenshot: publicUrl, // Base64 အစား Online Link ကိုသုံးထားပါတယ် App မလေးအောင်လို့ပါ
+      status: 'Pending',
+      date: new Date().toLocaleString()
+    };
+    DB.orders.push(order);
+    saveData(DB);
+
+    showToast(`✅ Order တင်ပြီးပါပြီ! ကြာချိန် ${DB.settings.wait_time}`, 'success');
+    
+    setTimeout(() => { 
+      btn.innerHTML = oldBtnText;
+      btn.disabled = false;
+      goPage('orders'); 
+    }, 1500);
+
+  } catch (err) {
+    console.error("Supabase Error:", err);
+    showToast('❌ အမှားအယွင်းဖြစ်ပေါ်နေပါသည်။ ထပ်မံကြိုးစားကြည့်ပါ။', 'error');
+    btn.innerHTML = oldBtnText;
+    btn.disabled = false;
+  }
 }
 
 // ==========================================
